@@ -1,0 +1,33 @@
+{$MAP_DOMAIN} {
+    root * /var/www/{$MAP_DOMAIN}
+    encode zstd gzip
+
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+    }
+
+    @runtimeConfig path /amap-config.js
+    header @runtimeConfig Cache-Control "no-store"
+
+    handle /_AMapService/* {
+        uri strip_prefix /_AMapService
+        uri query +jscode {$AMAP_SECURITY_JS_CODE}
+        reverse_proxy https://restapi.amap.com {
+            header_up Host restapi.amap.com
+        }
+    }
+
+    handle /_AMapWebService/* {
+        uri strip_prefix /_AMapWebService
+        uri query +key {$AMAP_WEBSERVICE_KEY}
+        reverse_proxy https://restapi.amap.com {
+            header_up Host restapi.amap.com
+        }
+    }
+
+    handle {
+        try_files {path} /route-planner.html
+        file_server
+    }
+}

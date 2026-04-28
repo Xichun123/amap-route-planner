@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#12343b" />
+    <title>多点路线规划</title>
+    <link rel="manifest" href="./app-manifest.webmanifest" />
+    <link rel="stylesheet" href="./route-planner.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <div id="map" class="map-stage" aria-label="高德地图"></div>
+
+      <section class="top-panel" aria-label="地点搜索">
+        <form id="search-form" class="search-form">
+          <input
+            id="search-input"
+            class="search-input"
+            type="search"
+            autocomplete="off"
+            placeholder="搜索地点"
+            aria-label="搜索地点"
+          />
+          <input
+            id="city-input"
+            class="city-input"
+            type="text"
+            autocomplete="off"
+            placeholder="城市"
+            aria-label="城市"
+          />
+          <button class="icon-button primary" type="submit" aria-label="搜索">搜</button>
+        </form>
+        <div id="search-results" class="search-results" hidden></div>
+      </section>
+
+      <section class="status-strip" aria-live="polite">
+        <span id="status-text">等待加载地图</span>
+        <button id="reload-button" class="text-button" type="button">重载</button>
+      </section>
+
+      <section class="bottom-sheet" aria-label="路线规划">
+        <button
+          id="sheet-grip-button"
+          class="sheet-grip-button"
+          type="button"
+          aria-label="收起路线面板手柄"
+          aria-expanded="true"
+        >
+          <span class="sheet-grip" aria-hidden="true"></span>
+        </button>
+        <div class="sheet-header">
+          <div>
+            <h1>到访地点</h1>
+            <p id="route-summary">还没有添加地点</p>
+          </div>
+          <div class="header-actions">
+            <button id="locate-button" class="text-button" type="button">定位</button>
+            <button
+              id="sheet-collapse-button"
+              class="sheet-collapse-button"
+              type="button"
+              aria-label="收起路线面板"
+              aria-expanded="true"
+            ></button>
+          </div>
+        </div>
+
+        <div class="route-options">
+          <label class="switch-line">
+            <input id="manual-order-toggle" type="checkbox" />
+            <span>按列表顺序</span>
+          </label>
+          <select id="route-mode-select" class="mode-select" aria-label="交通方式">
+            <option value="auto">自动</option>
+            <option value="driving">驾车</option>
+            <option value="walking">步行</option>
+            <option value="riding">骑行</option>
+            <option value="transfer">公交</option>
+          </select>
+          <button id="plan-route-button" class="solid-button" type="button">规划路线</button>
+        </div>
+
+        <div id="stop-list" class="stop-list"></div>
+
+        <div class="sheet-actions">
+          <button id="open-navigation-button" class="text-button" type="button" disabled>
+            打开导航
+          </button>
+          <button id="clear-stops-button" class="text-button danger" type="button" disabled>
+            清空
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <script src="./amap-config.js"></script>
+    <script src="https://webapi.amap.com/loader.js"></script>
+    <script src="./route-planner.js"></script>
+  </body>
+</html>
