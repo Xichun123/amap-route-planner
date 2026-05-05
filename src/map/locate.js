@@ -9,6 +9,11 @@ function formatAccuracy(meters) {
   return `${Math.round(meters)} 米`;
 }
 
+function pickCity(addr) {
+  if (!addr) return "";
+  return String(addr.city || addr.province || addr.district || "").trim();
+}
+
 export function locateUser(onDone) {
   if (!state.geolocation) {
     setStatus("地图还没有加载");
@@ -20,6 +25,7 @@ export function locateUser(onDone) {
       state.currentPosition = lngLatToArray(result.position);
       state.currentAddress = result.formattedAddress || "当前位置";
       state.currentAccuracy = Number.isFinite(result.accuracy) ? Number(result.accuracy) : null;
+      state.currentCity = pickCity(result.addressComponent);
       syncStartMarker();
       const accText = formatAccuracy(state.currentAccuracy);
       setStatus(accText ? `定位成功，精度约 ${accText}` : "定位成功");
@@ -27,6 +33,7 @@ export function locateUser(onDone) {
       state.currentPosition = lngLatToArray(state.map.getCenter());
       state.currentAddress = "地图中心";
       state.currentAccuracy = null;
+      state.currentCity = "";
       syncStartMarker();
       setStatus("定位失败，已用地图中心作起点");
     }

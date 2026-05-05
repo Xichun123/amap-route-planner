@@ -11,6 +11,7 @@ export const state = {
   currentPosition: null,
   currentAddress: "",
   currentAccuracy: null,
+  currentCity: "",
   startMarker: null,
   accuracyCircle: null,
   stops: [],

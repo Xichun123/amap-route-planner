@@ -70,10 +70,14 @@ export function ensureSearchInstances(AMap) {
 export function bindAutocompleteInput(input, cityInput, onSelect) {
   let timer = 0;
   let lastQuery = "";
+  let composing = false; // IME 中文拼音组合期标记
+
   const trigger = () => {
     const keyword = input.value.trim();
-    const city = cityInput.value.trim();
+    // 用户填的城市优先；没填则用定位拿到的城市做偏置，避免远距离结果
+    const city = (cityInput.value.trim() || state.currentCity || "").trim();
     if (!keyword) {
+      lastQuery = "";
       onSelect([]);
       return;
     }
@@ -81,10 +85,31 @@ export function bindAutocompleteInput(input, cityInput, onSelect) {
     lastQuery = keyword;
     searchPois(keyword, city, onSelect);
   };
-  input.addEventListener("input", () => {
+
+  const scheduleTrigger = () => {
     window.clearTimeout(timer);
-    timer = window.setTimeout(trigger, 220);
+    timer = window.setTimeout(trigger, 380);
+  };
+
+  // 关键：组合期不触发搜索，避免拼音逐字母触发"haidi…"这种垃圾搜索
+  input.addEventListener("compositionstart", () => {
+    composing = true;
+    window.clearTimeout(timer);
   });
+  input.addEventListener("compositionend", () => {
+    composing = false;
+    // 组合结束（已成词）立即触发，无需再等 debounce
+    window.clearTimeout(timer);
+    trigger();
+  });
+
+  input.addEventListener("input", (event) => {
+    // Safari 上 compositionend 之后还会再发一个 input 事件，
+    // 用 isComposing 兜底；同时显式忽略组合期间的 input
+    if (composing || event.isComposing) return;
+    scheduleTrigger();
+  });
+
   cityInput.addEventListener("change", () => {
     lastQuery = "";
     trigger();

@@ -86,7 +86,13 @@ async function boot() {
     });
 
     restoreStops();
-    locateUser(renderStops);
+    locateUser(() => {
+      renderStops();
+      // 定位成功 → 自动用当前城市做搜索偏置（仅在用户未手动填城市时）
+      if (state.currentCity && !dom.cityInput.value.trim()) {
+        dom.cityInput.value = state.currentCity;
+      }
+    });
     setStatus("地图已加载");
   } catch (error) {
     console.error(error);

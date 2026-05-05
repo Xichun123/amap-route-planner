@@ -106,7 +106,20 @@ export function getOriginStop() {
    ============================================================ */
 const SEARCH_FIT_PADDING = [80, 60, 60, 60];
 
+function isPointInBounds(map, point) {
+  try {
+    const bounds = map.getBounds();
+    if (!bounds || typeof bounds.contains !== "function") return false;
+    return bounds.contains(point);
+  } catch (_) {
+    return false;
+  }
+}
+
 export function renderSearchMarkers(pois, onPick) {
+  // 渲染前记录当前是否已有标记 —— 用于判断是否要 fit 视野（仅首次出现时 fit）
+  const hadPrevious = Array.isArray(state.searchMarkers) && state.searchMarkers.length > 0;
+
   clearSearchMarkers();
   const { AMap, map } = state;
   if (!AMap || !map || !Array.isArray(pois) || !pois.length) return;
@@ -140,12 +153,22 @@ export function renderSearchMarkers(pois, onPick) {
   }
   state.searchMarkers = markers;
 
-  // 自适应视野；任何参数不匹配都不影响主流程
+  // 仅在「上一轮无候选」时才 fit 视野；用户输入后续字符时地图保持原状，
+  // 避免每次 input 都触发地图飞行。
+  if (hadPrevious) return;
+
+  // 如果首条结果已经在当前视野内，无需 fit，避免不必要的飞行
+  if (markers.length === 1 && isPointInBounds(map, pois[0].position)) return;
+
   try {
     if (markers.length === 1) {
       map.setCenter(pois[0].position);
     } else {
-      map.setFitView(markers, false, SEARCH_FIT_PADDING);
+      // 检查所有点是否都已在视野内：是 → 不动；否 → fit
+      const allVisible = pois.every((p) => isPointInBounds(map, p.position));
+      if (!allVisible) {
+        map.setFitView(markers, false, SEARCH_FIT_PADDING);
+      }
     }
   } catch (err) {
     console.warn("[search-marker] setFitView failed", err);
