@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "amap-route-planner-v20";
+const CACHE_NAME = "amap-route-planner-v21";
 const APP_SHELL = [
   "./index.html",
   "./route-planner.html",

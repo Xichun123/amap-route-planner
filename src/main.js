@@ -59,10 +59,8 @@ async function boot() {
     state.AMap = AMap;
     state.map = buildMap(AMap);
 
-    // 点地图任意位置 → 收起搜索列表（marker 仍保留，可直接点 marker 添加）
-    state.map.on("click", () => {
-      if (!dom.searchResults.hidden) dom.searchResults.hidden = true;
-    });
+    // 点地图任意位置 → 收起搜索列表 + 释放键盘焦点
+    state.map.on("click", hideSearchResults);
     state.geolocation = new AMap.Geolocation({
       enableHighAccuracy: true,
       timeout: 10000,
@@ -110,6 +108,16 @@ function handlePickPoi(poi) {
   dom.searchResults.hidden = true;
   dom.searchInput.value = "";
   clearSearchMarkers();
+}
+
+// 隐藏搜索列表 + 释放键盘焦点。所有"收起"路径统一走这里，
+// 避免出现：列表没了但光标还在输入框，重点击搜索框 focus 不再发的死状态。
+function hideSearchResults() {
+  if (dom.searchResults.hidden) return;
+  dom.searchResults.hidden = true;
+  if (document.activeElement === dom.searchInput) {
+    dom.searchInput.blur();
+  }
 }
 
 function handlePlanRoute() {
@@ -200,13 +208,20 @@ function bindEvents() {
     if (event.target.closest('[data-action="close-search-results"]')) {
       event.preventDefault();
       event.stopPropagation();
-      dom.searchResults.hidden = true;
+      hideSearchResults();
     }
   });
 
-  // 重新聚焦搜索框 → 如果之前的结果还在 DOM 里，自动展开（不再次请求）
+  // 点搜索框 → 如果之前的结果还在 DOM 里，自动展开（不再次请求）。
+  // 用 click 而不是 focus：输入框已聚焦时再次点它不会再触发 focus。
+  dom.searchInput.addEventListener("click", () => {
+    if (dom.searchResults.children.length > 0 && dom.searchInput.value.trim()) {
+      dom.searchResults.hidden = false;
+    }
+  });
+
   dom.searchInput.addEventListener("focus", () => {
-    if (dom.searchResults.children.length > 0) {
+    if (dom.searchResults.children.length > 0 && dom.searchInput.value.trim()) {
       dom.searchResults.hidden = false;
     }
   });
