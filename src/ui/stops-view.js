@@ -87,6 +87,17 @@ export function refreshMarkers() {
 export function renderSearchResults(pois, onPick) {
   dom.searchResults.innerHTML = "";
   dom.searchResults.hidden = pois.length === 0;
+  if (!pois.length) return;
+
+  // 顶部"收起"工具栏 —— 让用户能主动隐藏列表，露出地图上的候选 marker
+  const toolbar = document.createElement("div");
+  toolbar.className = "search-results-toolbar";
+  toolbar.innerHTML = `
+    <span class="search-results-count">${pois.length} 个候选 · 点击地图标记可直接添加</span>
+    <button class="search-results-close" type="button" data-action="close-search-results" aria-label="收起搜索列表">${ICONS.chevronDown}</button>
+  `;
+  dom.searchResults.appendChild(toolbar);
+
   pois.forEach((poi) => {
     const button = document.createElement("button");
     button.className = "result-item";

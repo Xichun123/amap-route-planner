@@ -58,6 +58,11 @@ async function boot() {
     const AMap = await loadAMap(config);
     state.AMap = AMap;
     state.map = buildMap(AMap);
+
+    // 点地图任意位置 → 收起搜索列表（marker 仍保留，可直接点 marker 添加）
+    state.map.on("click", () => {
+      if (!dom.searchResults.hidden) dom.searchResults.hidden = true;
+    });
     state.geolocation = new AMap.Geolocation({
       enableHighAccuracy: true,
       timeout: 10000,
@@ -188,6 +193,22 @@ function bindEvents() {
     event.preventDefault();
     // Trigger autocomplete flow by re-dispatching input.
     dom.searchInput.dispatchEvent(new Event("input"));
+  });
+
+  // 搜索结果列表内的「收起」按钮（事件委托）
+  dom.searchResults.addEventListener("click", (event) => {
+    if (event.target.closest('[data-action="close-search-results"]')) {
+      event.preventDefault();
+      event.stopPropagation();
+      dom.searchResults.hidden = true;
+    }
+  });
+
+  // 重新聚焦搜索框 → 如果之前的结果还在 DOM 里，自动展开（不再次请求）
+  dom.searchInput.addEventListener("focus", () => {
+    if (dom.searchResults.children.length > 0) {
+      dom.searchResults.hidden = false;
+    }
   });
 
   dom.reloadButton.addEventListener("click", () => window.location.reload());
