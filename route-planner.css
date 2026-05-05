@@ -237,7 +237,9 @@ input, select { outline: none; }
   border: 0.5px solid var(--separator);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-lg);
-  padding: 4px;
+  /* 顶部不留 padding，避免 sticky 工具栏上方出现 4px 漏边
+     让列表内容透出（滑动时眼花的根因） */
+  padding: 0 4px 4px 4px;
 }
 
 /* —— 顶部 sticky 工具栏：候选数 + 收起按钮 —— */
@@ -249,12 +251,13 @@ input, select { outline: none; }
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 6px 6px 6px 12px;
+  padding: 8px 6px 8px 12px;
   background: var(--panel-glass-strong);
   -webkit-backdrop-filter: saturate(180%) blur(28px);
   backdrop-filter: saturate(180%) blur(28px);
   border-bottom: 0.5px solid var(--separator);
-  margin: -4px -4px 4px -4px;
+  /* 用左右负 margin 把工具栏铺到整条宽度；顶部不再 -4px */
+  margin: 0 -4px 4px -4px;
   border-top-left-radius: var(--r-lg);
   border-top-right-radius: var(--r-lg);
 }
