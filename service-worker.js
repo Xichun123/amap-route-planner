@@ -1,11 +1,32 @@
 "use strict";
 
-const CACHE_NAME = "amap-route-planner-v9";
+const CACHE_NAME = "amap-route-planner-v12";
 const APP_SHELL = [
   "./index.html",
   "./route-planner.html",
   "./route-planner.css",
-  "./route-planner.js",
+  "./src/main.js",
+  "./src/config.js",
+  "./src/state.js",
+  "./src/dom.js",
+  "./src/storage.js",
+  "./src/stops.js",
+  "./src/plans.js",
+  "./src/utils/geo.js",
+  "./src/utils/format.js",
+  "./src/ui/status.js",
+  "./src/ui/sheet.js",
+  "./src/ui/stops-view.js",
+  "./src/ui/plans-view.js",
+  "./src/map/loader.js",
+  "./src/map/locate.js",
+  "./src/map/markers.js",
+  "./src/search/poi.js",
+  "./src/route/optimizer.js",
+  "./src/route/recommender.js",
+  "./src/route/services.js",
+  "./src/route/planner.js",
+  "./src/route/navigation.js",
   "./app-manifest.webmanifest",
 ];
 
@@ -28,8 +49,7 @@ self.addEventListener("fetch", (event) => {
   if (requestUrl.origin !== self.location.origin) return;
   if (
     requestUrl.pathname === "/amap-config.js" ||
-    requestUrl.pathname.startsWith("/_AMapService/") ||
-    requestUrl.pathname.startsWith("/_AMapWebService/")
+    requestUrl.pathname.startsWith("/_AMapService/")
   ) {
     event.respondWith(fetch(event.request));
     return;
@@ -41,8 +61,6 @@ self.addEventListener("fetch", (event) => {
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
         return response;
       })
-      .catch(() => {
-        return caches.match(event.request);
-      }),
+      .catch(() => caches.match(event.request)),
   );
 });

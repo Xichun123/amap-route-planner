@@ -18,14 +18,6 @@
         }
     }
 
-    handle /_AMapWebService/* {
-        uri strip_prefix /_AMapWebService
-        uri query +key {$AMAP_WEBSERVICE_KEY}
-        reverse_proxy https://restapi.amap.com {
-            header_up Host restapi.amap.com
-        }
-    }
-
     handle {
         try_files {path} /route-planner.html
         file_server

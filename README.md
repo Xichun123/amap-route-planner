@@ -2,21 +2,23 @@
 
 [English](README.md) | [中文](README.zh-CN.md)
 
-Mobile-first multi-stop route planner built with AMap JSAPI and AMap WebService.
+Mobile-first multi-stop route planner built entirely on AMap JSAPI v2 plugins. Map rendering, POI autocomplete, and all routing (driving / walking / riding / transfer) run through the JSAPI — a JSAPI Key plus its security code is all you need. No WebService Key anywhere.
 
-It can search POIs, add multiple stops on the map, set a custom origin, mark priority stops, optimize visit order, choose travel mode, draw the route, and open the first leg in AMap navigation.
+It can search POIs with live autocomplete, add multiple stops on the map, set a custom origin, mark priority stops, optimize visit order, choose a travel mode, draw the route, and open the first leg in AMap navigation.
 
 ## Features
 
 - AMap JSAPI v2 map rendering.
-- POI keyword search through a server-side WebService proxy.
+- `AMap.AutoComplete` powered live POI suggestions (type to search).
+- `AMap.Driving / Walking / Riding / Transfer` plugins for route planning.
 - Add, remove, reorder, and mark stops.
 - Set any stop as the route origin.
 - Priority stops are visited first.
 - Optional strict list-order routing.
 - Travel modes: auto, driving, walking, riding, transfer.
 - Auto mode recommends walking, riding, or driving by rough total distance.
-- Server-side proxy keeps `AMAP_SECURITY_JS_CODE` and `AMAP_WEBSERVICE_KEY` out of frontend files.
+- `serviceHost` proxy keeps `AMAP_SECURITY_JS_CODE` out of the frontend.
+- Source split into ES modules under `src/` (map, search, route, ui, utils).
 - PWA manifest and service worker included.
 
 ## Required AMap Keys
@@ -27,15 +29,16 @@ Create these keys in the AMap console:
 | --- | --- | --- |
 | `AMAP_JSAPI_KEY` | Web JSAPI | Browser map loader. This key is visible to the browser by design. |
 | `AMAP_SECURITY_JS_CODE` | Web JSAPI security code | Server proxy only. Do not ship it in frontend code. |
-| `AMAP_WEBSERVICE_KEY` | WebService API | Server proxy only. Do not ship it in frontend code. |
 
-In the AMap console, add your production domain, for example `map.example.com`, to the Web JSAPI key's allowed domains.
+In the AMap console, add your production domain (for example `map.example.com`) to the Web JSAPI key's allowed domains.
+
+> The WebService Key that earlier versions required has been removed in this refactor; POI search and route planning are all handled by JSAPI plugins.
 
 ## Local Preview
 
-The checked-in `amap-config.js` contains an empty JSAPI key, so it will not load a real map until configured.
+The checked-in `amap-config.js` contains an empty JSAPI key, so the page will not load a real map until configured.
 
-For a quick layout-only preview:
+The entry point is `route-planner.html`, which loads code via `<script type="module" src="./src/main.js">`. It must be served over HTTP — `file://` will not work.
 
 ```bash
 python3 -m http.server 4173
@@ -66,8 +69,7 @@ Do not commit `.env` or a real-key `amap-config.js`.
 Recommended production setup:
 
 - Static files served by Caddy.
-- `/_AMapService/*` proxy appends `AMAP_SECURITY_JS_CODE`.
-- `/_AMapWebService/*` proxy appends `AMAP_WEBSERVICE_KEY`.
+- `/_AMapService/*` proxy forwards JSAPI online requests and appends `AMAP_SECURITY_JS_CODE`.
 - Frontend only receives `AMAP_JSAPI_KEY` and same-origin proxy URLs.
 
 The examples below assume:
@@ -78,13 +80,9 @@ The examples below assume:
 
 ### 1. Prepare DNS
 
-Create an `A` record:
-
 ```text
 map.example.com -> YOUR_SERVER_IP
 ```
-
-Keep it DNS-only if your provider has proxy modes and you want to avoid TLS or edge proxy issues while debugging.
 
 ### 2. Install Caddy
 
@@ -101,8 +99,6 @@ sudo apt install -y caddy
 
 ### 3. Upload Files
 
-From your workstation:
-
 ```bash
 scp -r ./* root@YOUR_SERVER_IP:/tmp/amap-route-planner/
 ```
@@ -117,8 +113,6 @@ sudo cp -a /tmp/amap-route-planner/. /var/www/$MAP_DOMAIN/
 
 ### 4. Render Runtime Frontend Config
 
-On the server:
-
 ```bash
 cd /var/www/map.example.com
 sudo cp .env.example .env
@@ -131,7 +125,6 @@ Fill:
 MAP_DOMAIN=map.example.com
 AMAP_JSAPI_KEY=your-web-jsapi-key
 AMAP_SECURITY_JS_CODE=your-jsapi-security-code
-AMAP_WEBSERVICE_KEY=your-webservice-key
 ```
 
 Then render `amap-config.js`:
@@ -146,24 +139,19 @@ set +a
 
 ### 5. Configure Caddy
 
-Create a Caddy environment file:
-
 ```bash
 sudo mkdir -p /etc/caddy
 sudo tee /etc/caddy/amap-route-planner.env >/dev/null <<'EOF'
 MAP_DOMAIN=map.example.com
 AMAP_SECURITY_JS_CODE=your-jsapi-security-code
-AMAP_WEBSERVICE_KEY=your-webservice-key
 EOF
 ```
 
-Expose that file to the Caddy service:
+Expose that file to Caddy:
 
 ```bash
 sudo systemctl edit caddy
 ```
-
-Add:
 
 ```ini
 [Service]
@@ -181,8 +169,6 @@ sudo systemctl reload caddy
 
 ### 6. Verify
 
-Check the site:
-
 ```bash
 curl -I https://map.example.com/route-planner.html
 curl -I https://map.example.com/amap-config.js
@@ -194,29 +180,17 @@ curl -I https://map.example.com/amap-config.js
 Cache-Control: no-store
 ```
 
-Check the POI proxy. The URL does not include a key; Caddy appends it:
+Check the JSAPI proxy (Caddy appends `jscode` automatically):
 
 ```bash
-curl "https://map.example.com/_AMapWebService/v3/place/text?keywords=故宫&city=北京&citylimit=true&offset=3&page=1&extensions=all&output=JSON"
+curl -I "https://map.example.com/_AMapService/v3/iplocation"
 ```
 
-Expected result:
-
-```json
-{"status":"1","info":"OK"}
-```
-
-Then open:
-
-```text
-https://map.example.com/route-planner.html
-```
-
-Search a place, add multiple stops, and click `规划路线`.
+Then open `https://map.example.com/route-planner.html`, type a keyword in the search box to see live suggestions, pick entries to add them as stops, and hit `规划路线`.
 
 ## Updating A Deployed Site
 
-Upload changed static files to the site root, then render runtime config again if `AMAP_JSAPI_KEY` or domain changed:
+Upload changed static files to the site root, then render runtime config again if `AMAP_JSAPI_KEY` or the domain changed:
 
 ```bash
 cd /var/www/map.example.com
@@ -227,13 +201,12 @@ set +a
 sudo systemctl reload caddy
 ```
 
-If a browser keeps old assets, hard refresh once or clear site data. The service worker cache version is inside `service-worker.js`.
+If a browser keeps old assets, hard refresh once or clear site data. The service worker cache version is inside `service-worker.js` (bump `CACHE_NAME` on any breaking change).
 
 ## Security Notes
 
 - Never commit `.env`.
 - Never commit a real `AMAP_SECURITY_JS_CODE`.
-- Never commit a real `AMAP_WEBSERVICE_KEY`.
 - `AMAP_JSAPI_KEY` is necessarily visible to the browser because AMap JSAPI requires it at load time.
 - Restrict your AMap JSAPI key to your production domain in the AMap console.
 - If a key leaks, rotate it in the AMap console and update `/etc/caddy/amap-route-planner.env`.
@@ -250,10 +223,35 @@ If a browser keeps old assets, hard refresh once or clear site data. The service
 ├── index.html
 ├── route-planner.css
 ├── route-planner.html
-├── route-planner.js
 ├── scripts/
 │   └── render-amap-config.sh
-└── service-worker.js
+├── service-worker.js
+└── src/
+    ├── config.js           # constants, runtime config reader
+    ├── state.js            # shared runtime state
+    ├── dom.js              # DOM element references
+    ├── storage.js          # localStorage helpers
+    ├── stops.js            # stop CRUD / origin / priority
+    ├── main.js             # entry point, event wiring
+    ├── map/
+    │   ├── loader.js       # AMapLoader + Map bootstrap
+    │   ├── locate.js       # geolocation flow
+    │   └── markers.js      # origin / stop markers
+    ├── search/
+    │   └── poi.js          # AMap.AutoComplete suggestions
+    ├── route/
+    │   ├── optimizer.js    # open-path TSP optimizer
+    │   ├── recommender.js  # auto-mode selection
+    │   ├── services.js     # Driving/Walking/Riding/Transfer wrappers
+    │   ├── planner.js      # plan + draw routes
+    │   └── navigation.js   # deep-link to AMap native navigation
+    ├── ui/
+    │   ├── status.js       # status bar
+    │   ├── sheet.js        # bottom sheet collapse
+    │   └── stops-view.js   # stop list + search result rendering
+    └── utils/
+        ├── geo.js          # coords, distances
+        └── format.js       # text / html helpers
 ```
 
 ## License

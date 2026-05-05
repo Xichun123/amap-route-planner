@@ -76,8 +76,7 @@ button {
 
 .search-input,
 .city-input,
-.mode-select,
-.config-form input {
+.mode-select {
   min-width: 0;
   height: 42px;
   padding: 0 12px;
@@ -90,8 +89,7 @@ button {
 
 .search-input:focus,
 .city-input:focus,
-.mode-select:focus,
-.config-form input:focus {
+.mode-select:focus {
   border-color: var(--blue);
   box-shadow: 0 0 0 3px rgba(23, 105, 224, 0.12);
 }
@@ -343,8 +341,7 @@ button {
 }
 
 .stop-index,
-.stop-marker,
-.start-marker {
+.stop-marker {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -373,8 +370,43 @@ button {
   background: var(--amber);
 }
 
-.start-marker {
-  background: var(--green);
+.locate-marker {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+.locate-dot {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 14px;
+  height: 14px;
+  background: #1a73e8;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(16, 32, 39, 0.35);
+}
+
+.locate-dot::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border: 2px solid rgba(26, 115, 232, 0.45);
+  border-radius: 50%;
+  animation: locate-pulse 2s ease-out infinite;
+}
+
+@keyframes locate-pulse {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
 }
 
 .stop-controls {
@@ -411,32 +443,59 @@ button {
   padding-top: 10px;
 }
 
-.config-dialog {
-  width: min(420px, calc(100vw - 28px));
+.plan-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.plan-bar .text-button {
+  flex: 1;
+  min-height: 36px;
+}
+
+.plan-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0 6px;
+  background: rgba(23, 105, 224, 0.16);
+  color: var(--blue);
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.plan-dialog {
+  width: min(440px, calc(100vw - 28px));
+  max-height: min(78dvh, 560px);
   padding: 0;
   border: 0;
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 24px 60px rgba(16, 32, 39, 0.32);
 }
 
-.config-dialog::backdrop {
+.plan-dialog::backdrop {
   background: rgba(16, 32, 39, 0.42);
   backdrop-filter: blur(4px);
 }
 
-.config-form {
+.plan-form {
   display: grid;
   gap: 14px;
   padding: 18px;
   background: #fff;
 }
 
-.config-form h2 {
+.plan-form h2 {
   margin: 0 0 2px;
   font-size: 19px;
 }
 
-.config-form label {
+.plan-form label {
   display: grid;
   gap: 6px;
   color: var(--muted);
@@ -444,17 +503,103 @@ button {
   font-weight: 680;
 }
 
-.config-message {
+.plan-form input[type="text"] {
+  height: 42px;
+  padding: 0 12px;
+  color: var(--ink);
+  background: #f7faf9;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  outline: none;
+  font: inherit;
+}
+
+.plan-form input[type="text"]:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(23, 105, 224, 0.12);
+}
+
+.plan-message {
   margin: 0;
   color: var(--muted);
   font-size: 12px;
   line-height: 1.45;
+  min-height: 16px;
 }
 
-.config-actions {
+.plan-message.error {
+  color: var(--red);
+}
+
+.plan-actions {
   display: flex;
   justify-content: space-between;
   gap: 10px;
+}
+
+.plan-actions.single {
+  justify-content: flex-end;
+}
+
+.plan-list {
+  max-height: 50dvh;
+  overflow: auto;
+  display: grid;
+  gap: 8px;
+  padding: 2px;
+}
+
+.plan-empty {
+  padding: 22px 8px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 14px;
+}
+
+.plan-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  background: #f7faf9;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.plan-row-main {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.plan-row-title {
+  font-weight: 760;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plan-row-meta {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.plan-row-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.plan-row-actions .mini-button {
+  width: auto;
+  padding: 0 10px;
+}
+
+.plan-row-actions .mini-button.danger {
+  color: var(--red);
+  background: #fff0ee;
 }
 
 .amap-logo,

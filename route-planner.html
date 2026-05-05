@@ -82,6 +82,13 @@
           <button id="plan-route-button" class="solid-button" type="button">规划路线</button>
         </div>
 
+        <div class="plan-bar">
+          <button id="save-plan-button" class="text-button" type="button" disabled>保存方案</button>
+          <button id="load-plan-button" class="text-button" type="button">
+            方案库 <span id="plan-count" class="plan-count">0</span>
+          </button>
+        </div>
+
         <div id="stop-list" class="stop-list"></div>
 
         <div class="sheet-actions">
@@ -96,8 +103,33 @@
 
     </main>
 
+    <dialog id="save-plan-dialog" class="plan-dialog" aria-label="保存方案">
+      <form id="save-plan-form" method="dialog" class="plan-form">
+        <h2>保存为方案</h2>
+        <label>
+          <span>方案名称</span>
+          <input id="save-plan-name" type="text" maxlength="40" required autocomplete="off" placeholder="例如：周末探店" />
+        </label>
+        <p id="save-plan-message" class="plan-message"></p>
+        <div class="plan-actions">
+          <button class="text-button" type="button" value="cancel" data-action="cancel">取消</button>
+          <button class="solid-button" type="submit" data-action="save">保存</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="plan-list-dialog" class="plan-dialog" aria-label="方案库">
+      <div class="plan-form">
+        <h2>方案库</h2>
+        <div id="plan-list" class="plan-list" aria-live="polite"></div>
+        <div class="plan-actions single">
+          <button class="text-button" type="button" data-action="close-plan-list">关闭</button>
+        </div>
+      </div>
+    </dialog>
+
     <script src="./amap-config.js"></script>
     <script src="https://webapi.amap.com/loader.js"></script>
-    <script src="./route-planner.js"></script>
+    <script type="module" src="./src/main.js"></script>
   </body>
 </html>
