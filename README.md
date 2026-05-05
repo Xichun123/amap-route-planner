@@ -1,8 +1,12 @@
-# AMap Multi-Stop Route Planner
+# PinPath · AMap Multi-Stop Route Planner
 
 [English](README.md) | [中文](README.zh-CN.md)
 
-Mobile-first multi-stop route planner built entirely on AMap JSAPI v2 plugins. Map rendering, POI autocomplete, and all routing (driving / walking / riding / transfer) run through the JSAPI — a JSAPI Key plus its security code is all you need. No WebService Key anywhere.
+<p>
+  <img src="./icons/icon-180.png" alt="PinPath" width="120" />
+</p>
+
+**PinPath** is a mobile-first multi-stop route planner with an Apple Maps inspired design, built entirely on AMap JSAPI v2 plugins. Map rendering, POI autocomplete, and all routing (driving / walking / riding / transfer) run through the JSAPI — a JSAPI Key plus its security code is all you need. No WebService Key anywhere.
 
 It can search POIs with live autocomplete, add multiple stops on the map, set a custom origin, mark priority stops, optimize visit order, choose a travel mode, draw the route, and open the first leg in AMap navigation.
 

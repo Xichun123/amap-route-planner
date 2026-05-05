@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "amap-route-planner-v17";
+const CACHE_NAME = "amap-route-planner-v18";
 const APP_SHELL = [
   "./index.html",
   "./route-planner.html",
@@ -30,6 +30,13 @@ const APP_SHELL = [
   "./src/route/planner.js",
   "./src/route/navigation.js",
   "./app-manifest.webmanifest",
+  "./icons/icon-32.png",
+  "./icons/icon-120.png",
+  "./icons/icon-152.png",
+  "./icons/icon-167.png",
+  "./icons/icon-180.png",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png",
 ];
 
 self.addEventListener("install", (event) => {

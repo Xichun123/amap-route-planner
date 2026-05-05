@@ -1,8 +1,12 @@
-# 高德多点路线规划
+# PinPath · 多点路线规划
 
 [English](README.md) | [中文](README.zh-CN.md)
 
-基于高德 JSAPI v2 插件的移动端优先多点路线规划工具。所有在线能力（地图、搜索、路线）均通过 JSAPI 完成，只需一把 JSAPI Key + 安全密钥，无需 WebService Key。
+<p>
+  <img src="./icons/icon-180.png" alt="PinPath" width="120" />
+</p>
+
+**PinPath** 是基于高德 JSAPI v2 插件的移动端优先多点路线规划工具，Apple Maps 风设计。所有在线能力（地图、搜索、路线）均通过 JSAPI 完成，只需一把 JSAPI Key + 安全密钥，无需 WebService Key。
 
 它支持搜索地点、添加多个到访点、设置自定义出发点、标记优先到达点、优化到访顺序、选择交通方式、绘制路线，并可打开第一段高德导航。
 

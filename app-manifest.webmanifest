@@ -1,17 +1,19 @@
 {
-  "name": "多点路线规划",
-  "short_name": "路线规划",
+  "name": "PinPath 多点路线规划",
+  "short_name": "PinPath",
+  "description": "多点路线规划：搜索、串联、优化、导航。Apple Maps 风设计。",
   "start_url": "./route-planner.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#edf2f0",
-  "theme_color": "#12343b",
+  "background_color": "#f2f2f7",
+  "theme_color": "#ffffff",
   "orientation": "portrait",
+  "lang": "zh-CN",
+  "categories": ["navigation", "travel", "utilities"],
   "icons": [
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%2312343b'/%3E%3Cpath d='M52 136c28-56 60-88 88-96 13-4 24 8 18 20-12 27-44 59-96 96-8 6-15-10-10-20Z' fill='%23e7f5ef'/%3E%3Ccircle cx='68' cy='124' r='15' fill='%231769e0'/%3E%3Ccircle cx='128' cy='64' r='15' fill='%23b56a17'/%3E%3C/svg%3E",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    }
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "./icons/icon-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
   ]
 }
