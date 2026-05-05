@@ -58,7 +58,10 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* —— Layout —— */
-  --sheet-peek-height: 144px;
+  /* peek 高度 = 内容基线 + 设备底部安全区。
+     基线 108 刚好容下 grip + h1 + summary + 12px 底 padding，
+     iPhone 刘海机会自动 +34px，Android 上收紧到 108 不浪费空间。 */
+  --sheet-peek-height: calc(108px + env(safe-area-inset-bottom));
   --sheet-mid-height: 62dvh;
   --sheet-full-height: calc(100dvh - 88px);
   --current-sheet-height: var(--sheet-mid-height);
