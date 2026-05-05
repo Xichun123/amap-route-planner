@@ -84,32 +84,99 @@ export function refreshMarkers() {
   });
 }
 
-export function renderSearchResults(pois, onPick) {
-  dom.searchResults.innerHTML = "";
-  dom.searchResults.hidden = pois.length === 0;
-  if (!pois.length) return;
-
-  // 顶部"收起"工具栏 —— 让用户能主动隐藏列表，露出地图上的候选 marker
+function buildToolbar(meta) {
   const toolbar = document.createElement("div");
   toolbar.className = "search-results-toolbar";
+  const total = meta.total || meta.loaded || 0;
+  const loaded = meta.loaded || 0;
+  const countText = total > loaded
+    ? `${loaded} / ${total} 个候选 · 滑到底加载更多`
+    : `${total || loaded} 个候选 · 点击地图标记可直接添加`;
   toolbar.innerHTML = `
-    <span class="search-results-count">${pois.length} 个候选 · 点击地图标记可直接添加</span>
+    <span class="search-results-count">${escapeHtml(countText)}</span>
     <button class="search-results-close" type="button" data-action="close-search-results" aria-label="收起搜索列表">${ICONS.chevronDown}</button>
   `;
-  dom.searchResults.appendChild(toolbar);
+  return toolbar;
+}
 
+function buildResultButton(poi, onPick) {
+  const button = document.createElement("button");
+  button.className = "result-item";
+  button.type = "button";
+  button.innerHTML = `
+    <span>
+      <span class="result-title">${escapeHtml(poi.name)}</span>
+      <span class="result-meta">${escapeHtml([poi.city, poi.address].filter(Boolean).join(" · "))}</span>
+    </span>
+    <span class="text-button">添加</span>
+  `;
+  button.addEventListener("click", () => onPick(poi));
+  return button;
+}
+
+function buildSentinel(meta) {
+  const sentinel = document.createElement("div");
+  sentinel.className = "search-results-sentinel";
+  sentinel.dataset.role = "sentinel";
+  if (meta.loading) {
+    sentinel.innerHTML = '<span class="search-spinner" aria-hidden="true"></span><span>加载中…</span>';
+  } else if (meta.hasMore) {
+    sentinel.textContent = "继续滚动加载更多";
+  } else {
+    sentinel.textContent = "—— 没有更多了 ——";
+    sentinel.classList.add("end");
+  }
+  return sentinel;
+}
+
+function refreshToolbarOnly(meta) {
+  const tb = dom.searchResults.querySelector(".search-results-toolbar .search-results-count");
+  if (!tb) return;
+  const total = meta.total || meta.loaded || 0;
+  const loaded = meta.loaded || 0;
+  tb.textContent = total > loaded
+    ? `${loaded} / ${total} 个候选 · 滑到底加载更多`
+    : `${total || loaded} 个候选 · 点击地图标记可直接添加`;
+}
+
+function refreshSentinel(meta) {
+  const old = dom.searchResults.querySelector('[data-role="sentinel"]');
+  if (old) old.remove();
+  if (meta.loaded > 0 || meta.loading) {
+    dom.searchResults.appendChild(buildSentinel(meta));
+  }
+}
+
+/**
+ * 渲染搜索结果列表。
+ * meta.append=false: 重置整个列表（首屏）
+ * meta.append=true:  在现有结果后追加（加载下一页）
+ */
+export function renderSearchResults(pois, onPick, meta = {}) {
+  // 首屏（非 append）— 重置整个列表
+  if (!meta.append) {
+    dom.searchResults.innerHTML = "";
+    dom.searchResults.hidden = pois.length === 0;
+    if (!pois.length) return;
+    dom.searchResults.appendChild(buildToolbar(meta));
+    pois.forEach((poi) => dom.searchResults.appendChild(buildResultButton(poi, onPick)));
+    refreshSentinel(meta);
+    return;
+  }
+
+  // append 路径
+  if (meta.loading && pois.length === 0) {
+    // 仅切换底部 sentinel 到"加载中"
+    refreshSentinel(meta);
+    return;
+  }
+  // 把新结果插到 sentinel 之前
+  const sentinel = dom.searchResults.querySelector('[data-role="sentinel"]');
   pois.forEach((poi) => {
-    const button = document.createElement("button");
-    button.className = "result-item";
-    button.type = "button";
-    button.innerHTML = `
-      <span>
-        <span class="result-title">${escapeHtml(poi.name)}</span>
-        <span class="result-meta">${escapeHtml([poi.city, poi.address].filter(Boolean).join(" · "))}</span>
-      </span>
-      <span class="text-button">添加</span>
-    `;
-    button.addEventListener("click", () => onPick(poi));
-    dom.searchResults.appendChild(button);
+    const node = buildResultButton(poi, onPick);
+    if (sentinel) dom.searchResults.insertBefore(node, sentinel);
+    else dom.searchResults.appendChild(node);
   });
+  refreshToolbarOnly(meta);
+  refreshSentinel(meta);
 }

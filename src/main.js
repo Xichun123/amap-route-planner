@@ -11,8 +11,8 @@ import { applySheetPosition, expandSheet, collapseSheet } from "./ui/sheet.js";
 import { renderStops, refreshMarkers, renderSearchResults } from "./ui/stops-view.js";
 import { loadAMap, buildMap, destroyMap } from "./map/loader.js";
 import { locateUser } from "./map/locate.js";
-import { ensureSearchInstances, bindAutocompleteInput } from "./search/poi.js";
-import { renderSearchMarkers, clearSearchMarkers } from "./map/markers.js";
+import { ensureSearchInstances, bindAutocompleteInput, loadMorePois } from "./search/poi.js";
+import { renderSearchMarkers, appendSearchMarkers, clearSearchMarkers } from "./map/markers.js";
 import { ensureRoutingInstances } from "./route/services.js";
 import { planRoute, clearAllRoutes } from "./route/planner.js";
 import { openFirstLegNavigation } from "./route/navigation.js";
@@ -79,10 +79,14 @@ async function boot() {
     ensureSearchInstances(AMap);
     ensureRoutingInstances(AMap, state.map);
 
-    bindAutocompleteInput(dom.searchInput, dom.cityInput, (pois) => {
-      renderSearchResults(pois, handlePickPoi);
+    bindAutocompleteInput(dom.searchInput, dom.cityInput, (pois, meta = {}) => {
+      renderSearchResults(pois, handlePickPoi, meta);
       try {
-        renderSearchMarkers(pois, handlePickPoi);
+        if (meta.append) {
+          if (!meta.loading) appendSearchMarkers(pois, handlePickPoi);
+        } else {
+          renderSearchMarkers(pois, handlePickPoi);
+        }
       } catch (err) {
         console.warn("[search-markers] render failed", err);
       }
@@ -223,6 +227,25 @@ function bindEvents() {
   dom.searchInput.addEventListener("focus", () => {
     if (dom.searchResults.children.length > 0 && dom.searchInput.value.trim()) {
       dom.searchResults.hidden = false;
+    }
+  });
+
+  // 滚动到接近底部 → 自动加载下一页
+  dom.searchResults.addEventListener("scroll", () => {
+    const el = dom.searchResults;
+    if (el.hidden) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distanceFromBottom < 80) {
+      loadMorePois((pois, meta) => {
+        renderSearchResults(pois, handlePickPoi, meta);
+        if (meta && meta.append && !meta.loading && pois.length) {
+          try {
+            appendSearchMarkers(pois, handlePickPoi);
+          } catch (err) {
+            console.warn("[search-markers] append failed", err);
+          }
+        }
+      });
     }
   });
 

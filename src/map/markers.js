@@ -184,3 +184,38 @@ export function clearSearchMarkers() {
   }
   state.searchMarkers = [];
 }
+
+/**
+ * 追加搜索结果标记（用于"加载更多"），不清空已有，不 fit 视野。
+ */
+export function appendSearchMarkers(pois, onPick) {
+  const { AMap, map } = state;
+  if (!AMap || !map || !Array.isArray(pois) || !pois.length) return;
+  const startIndex = state.searchMarkers ? state.searchMarkers.length : 0;
+  const markers = [];
+  pois.forEach((poi, i) => {
+    if (!poi || !Array.isArray(poi.position)) return;
+    try {
+      const marker = new AMap.Marker({
+        position: poi.position,
+        content: `<div class="search-marker" title="${escapeHtml(poi.name || "")}">${startIndex + i + 1}</div>`,
+        offset: new AMap.Pixel(-15, -15),
+        zIndex: 95,
+      });
+      if (typeof onPick === "function") {
+        marker.on("click", () => onPick(poi));
+      }
+      markers.push(marker);
+    } catch (err) {
+      console.warn("[search-marker] append create failed", err);
+    }
+  });
+  if (!markers.length) return;
+  try {
+    map.add(markers);
+  } catch (err) {
+    console.warn("[search-marker] append add failed", err);
+    return;
+  }
+  state.searchMarkers = (state.searchMarkers || []).concat(markers);
+}
