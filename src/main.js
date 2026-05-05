@@ -4,14 +4,15 @@ import { dom } from "./dom.js";
 import {
   saveRouteMode,
   loadRouteMode,
-  loadSheetCollapsed,
+  loadSheetPosition,
 } from "./storage.js";
 import { setStatus } from "./ui/status.js";
-import { applySheetCollapsed, toggleSheet } from "./ui/sheet.js";
+import { applySheetPosition, expandSheet, collapseSheet } from "./ui/sheet.js";
 import { renderStops, refreshMarkers, renderSearchResults } from "./ui/stops-view.js";
 import { loadAMap, buildMap, destroyMap } from "./map/loader.js";
 import { locateUser } from "./map/locate.js";
 import { ensureSearchInstances, bindAutocompleteInput } from "./search/poi.js";
+import { renderSearchMarkers, clearSearchMarkers } from "./map/markers.js";
 import { ensureRoutingInstances } from "./route/services.js";
 import { planRoute, clearAllRoutes } from "./route/planner.js";
 import { openFirstLegNavigation } from "./route/navigation.js";
@@ -40,7 +41,7 @@ document.addEventListener("DOMContentLoaded", boot);
 
 async function boot() {
   bindEvents();
-  applySheetCollapsed(loadSheetCollapsed());
+  applySheetPosition(loadSheetPosition());
   dom.routeModeSelect.value = loadRouteMode();
   refreshPlanCount();
 
@@ -75,9 +76,14 @@ async function boot() {
     ensureSearchInstances(AMap);
     ensureRoutingInstances(AMap, state.map);
 
-    bindAutocompleteInput(dom.searchInput, dom.cityInput, (pois) =>
-      renderSearchResults(pois, handlePickPoi),
-    );
+    bindAutocompleteInput(dom.searchInput, dom.cityInput, (pois) => {
+      renderSearchResults(pois, handlePickPoi);
+      try {
+        renderSearchMarkers(pois, handlePickPoi);
+      } catch (err) {
+        console.warn("[search-markers] render failed", err);
+      }
+    });
 
     restoreStops();
     locateUser(renderStops);
@@ -92,6 +98,7 @@ function handlePickPoi(poi) {
   addStop(poi);
   dom.searchResults.hidden = true;
   dom.searchInput.value = "";
+  clearSearchMarkers();
 }
 
 function handlePlanRoute() {
@@ -179,8 +186,8 @@ function bindEvents() {
 
   dom.reloadButton.addEventListener("click", () => window.location.reload());
   dom.locateButton.addEventListener("click", () => locateUser(renderStops));
-  dom.sheetGripButton.addEventListener("click", toggleSheet);
-  dom.sheetCollapseButton.addEventListener("click", toggleSheet);
+  dom.sheetGripButton.addEventListener("click", expandSheet);
+  dom.sheetCollapseButton.addEventListener("click", collapseSheet);
   dom.planRouteButton.addEventListener("click", handlePlanRoute);
   dom.clearStopsButton.addEventListener("click", handleClearStops);
   dom.openNavigationButton.addEventListener("click", openFirstLegNavigation);

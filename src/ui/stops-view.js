@@ -3,6 +3,7 @@ import { dom } from "../dom.js";
 import { escapeHtml } from "../utils/format.js";
 import { pointToText } from "../utils/geo.js";
 import { getDestinationStops, getRouteStartLabel } from "../route/planner.js";
+import { ICONS } from "./icons.js";
 
 function getDisplayOrderMap() {
   const map = new Map();
@@ -55,11 +56,11 @@ export function renderStops() {
         <span class="stop-meta">${escapeHtml(stop.address || stop.city || pointToText(stop.position))}</span>
       </span>
       <span class="stop-controls">
-        <button class="mini-button ${isOrigin ? "origin-on" : ""}" type="button" data-action="origin" aria-label="设为出发点">起</button>
-        <button class="mini-button" type="button" data-action="up" aria-label="上移">↑</button>
-        <button class="mini-button" type="button" data-action="down" aria-label="下移">↓</button>
-        <button class="mini-button ${stop.priority ? "priority-on" : ""}" type="button" data-action="priority" aria-label="优先" ${isOrigin ? "disabled" : ""}>先</button>
-        <button class="mini-button" type="button" data-action="remove" aria-label="删除">×</button>
+        <button class="mini-button ${isOrigin ? "origin-on" : ""}" type="button" data-action="origin" aria-label="设为出发点" title="设为出发点">${ICONS.flag}</button>
+        <button class="mini-button" type="button" data-action="up" aria-label="上移" title="上移">${ICONS.arrowUp}</button>
+        <button class="mini-button" type="button" data-action="down" aria-label="下移" title="下移">${ICONS.arrowDown}</button>
+        <button class="mini-button ${stop.priority ? "priority-on" : ""}" type="button" data-action="priority" aria-label="优先到访" title="优先到访" ${isOrigin ? "disabled" : ""}>${ICONS.star}</button>
+        <button class="mini-button" type="button" data-action="remove" aria-label="删除" title="删除">${ICONS.xmark}</button>
       </span>
     `;
     dom.stopList.appendChild(row);

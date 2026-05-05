@@ -22,7 +22,8 @@ export const STORAGE_KEYS = {
   stops: "amap-route-planner-stops",
   origin: "amap-route-planner-origin-stop",
   mode: "amap-route-planner-mode",
-  collapsed: "amap-route-planner-sheet-collapsed",
+  collapsed: "amap-route-planner-sheet-collapsed",        // legacy
+  sheetPosition: "amap-route-planner-sheet-position",     // peek | mid | full
 };
 
 function trimSlash(value) {

@@ -8,6 +8,8 @@
 
 ## 功能
 
+**核心**
+
 - 高德 JSAPI v2 地图渲染。
 - `AMap.AutoComplete` 实现搜索框即时联想（输入即搜）。
 - `AMap.Driving / Walking / Riding / Transfer` 插件完成路径规划。
@@ -20,6 +22,15 @@
 - 服务器端代理 `serviceHost` 转发高德 JSAPI 的鉴权请求，`AMAP_SECURITY_JS_CODE` 不出现在前端。
 - 代码拆分为 `src/` 下的 ES 模块（地图、搜索、路线、UI 等分层）。
 - 包含 PWA manifest 和 service worker。
+
+**UI 体验（v0.2）**
+
+- **苹果地图风设计系统**：完整 SF 颜色 / 字体 / 阴影 / 圆角体系，自动暗色模式。
+- **三档拖拽 Bottom Sheet**：peek（仅 header）/ mid（半屏，默认）/ full（接近全屏）。顶部 grip 循环放大，右侧 chevron 循环缩小，状态记忆到 localStorage。
+- **搜索结果同步落地图**：搜索时除了下拉列表外，所有候选 POI 同时以**红色编号标记**画到地图，自动适配视野；点列表行或点地图标记任一方式都能直接添加。便于按地理位置（"哪个最近"）选择。
+- **方案库**：保存 / 命名 / 加载多组到访点方案到 localStorage。
+- **完整内联 SVG 图标**（零外部依赖）：搜索、定位、规划路线、保存、方案库、起点、优先、上移下移、删除等。
+- **iOS 风格开关**、**滚动连接线**（stop 行之间垂直线串联）、**iOS 缓动动画**（`cubic-bezier(.32, .72, 0, 1)`）。
 
 ## 需要的高德 Key
 
@@ -188,6 +199,36 @@ curl -I "https://map.example.com/_AMapService/v3/iplocation"
 
 然后打开 `https://map.example.com/route-planner.html`，在搜索框输入关键词会即时联想，点击条目加入到访点，再点 `规划路线`。
 
+### 常见部署坑：JSONP 被 nosniff 拦截
+
+如果浏览器控制台出现：
+
+```text
+Refused to execute script from '<URL>' because its MIME type ('application/json') is not executable, and strict MIME type checking is enabled.
+```
+
+并且**搜索 / 定位 / 路径规划全都静默失效**，那是因为：
+
+1. 站点全局加了 `X-Content-Type-Options: nosniff`（推荐安全设置）。
+2. 高德 JSONP 接口返回 `Content-Type: application/json`。
+3. `nosniff` + 严格 MIME 模式下，浏览器拒绝把响应作为 `<script>` 执行。
+
+**修复方法**：在 `/_AMapService/*` 路由里同时做两件事 —— 抵消该路径的 `nosniff` + 强制改写响应 Content-Type：
+
+```caddy
+handle /_AMapService/* {
+    uri strip_prefix /_AMapService
+    uri query +jscode {$AMAP_SECURITY_JS_CODE}
+    header -X-Content-Type-Options
+    reverse_proxy https://restapi.amap.com {
+        header_up Host restapi.amap.com
+        header_down Content-Type "application/javascript; charset=utf-8"
+    }
+}
+```
+
+仓库内 `deploy/Caddyfile.example` 已包含此修复。`reload caddy` 后立即生效，前端无需改动。
+
 ## 更新已部署站点
 
 上传静态文件后，如果 `AMAP_JSAPI_KEY` 或域名发生变化，需要重新生成运行时配置：
@@ -230,13 +271,15 @@ sudo systemctl reload caddy
     ├── config.js           # 常量、读取运行时配置
     ├── state.js            # 全局运行时状态
     ├── dom.js              # DOM 节点引用
-    ├── storage.js          # localStorage 读写
+    ├── storage.js          # localStorage 读写（含 sheet 三档位置）
     ├── stops.js            # 到访点的增删改查
+    ├── plans.js            # 方案库的存取与查询
     ├── main.js             # 启动入口，事件绑定
     ├── map/
     │   ├── loader.js       # AMap 加载 + Map 实例创建
     │   ├── locate.js       # 定位逻辑
-    │   └── markers.js      # 起点/到访点 marker
+    │   ├── markers.js      # 起点/到访点 marker + 搜索结果红色候选标记
+    │   └── search-markers.js  # 兼容外壳，re-export from markers.js
     ├── search/
     │   └── poi.js          # AMap.AutoComplete 联想搜索
     ├── route/
@@ -247,8 +290,10 @@ sudo systemctl reload caddy
     │   └── navigation.js   # 跳转高德原生导航
     ├── ui/
     │   ├── status.js       # 顶部状态条
-    │   ├── sheet.js        # 底部面板折叠
-    │   └── stops-view.js   # 到访点、搜索结果渲染
+    │   ├── sheet.js        # 底部面板三档（peek/mid/full）
+    │   ├── stops-view.js   # 到访点、搜索结果渲染
+    │   ├── plans-view.js   # 方案库 dialog 渲染
+    │   └── icons.js        # 内联 SVG 图标库（SF Symbols 风）
     └── utils/
         ├── geo.js          # 坐标、距离
         └── format.js       # 文本、html 工具

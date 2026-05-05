@@ -13,8 +13,16 @@
     handle /_AMapService/* {
         uri strip_prefix /_AMapService
         uri query +jscode {$AMAP_SECURITY_JS_CODE}
+        # 抵消站点全局 X-Content-Type-Options: nosniff。
+        # 高德 JSONP 接口默认返回 Content-Type: application/json，
+        # 启用 nosniff 后浏览器会拒绝把响应作为 <script> 执行
+        # （"Refused to execute script ... MIME type ('application/json')"），
+        # 导致 AutoComplete / Geolocation 等 JSONP 调用全部静默失败。
+        header -X-Content-Type-Options
         reverse_proxy https://restapi.amap.com {
             header_up Host restapi.amap.com
+            # 强制把响应 Content-Type 改写为 javascript，配合上面去掉 nosniff。
+            header_down Content-Type "application/javascript; charset=utf-8"
         }
     }
 

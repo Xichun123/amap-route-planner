@@ -1,6 +1,7 @@
 import { dom } from "../dom.js";
 import { listPlans } from "../plans.js";
 import { escapeHtml } from "../utils/format.js";
+import { ICONS } from "./icons.js";
 
 export function refreshPlanCount() {
   const count = listPlans().length;
@@ -53,8 +54,8 @@ export function renderPlanList() {
         <span class="plan-row-meta">${escapeHtml(metaBits.join(" · "))}</span>
       </div>
       <div class="plan-row-actions">
-        <button class="mini-button" type="button" data-action="load">加载</button>
-        <button class="mini-button danger" type="button" data-action="delete" aria-label="删除方案">删</button>
+        <button class="mini-button" type="button" data-action="load" aria-label="加载方案" title="加载方案">${ICONS.download}<span>加载</span></button>
+        <button class="mini-button danger" type="button" data-action="delete" aria-label="删除方案" title="删除方案">${ICONS.trash}</button>
       </div>
     `;
     dom.planList.appendChild(row);

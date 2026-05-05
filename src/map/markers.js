@@ -1,4 +1,5 @@
 import { state } from "../state.js";
+import { escapeHtml } from "../utils/format.js";
 
 export function createStopMarker(stop, onClick) {
   const { AMap, map, stopMarkers } = state;
@@ -98,4 +99,65 @@ export function syncStartMarker() {
 export function getOriginStop() {
   if (!state.originStopId) return null;
   return state.stops.find((stop) => stop.id === state.originStopId) || null;
+}
+
+/* ============================================================
+   搜索结果候选标记（红色，点击直接添加为 stop）
+   ============================================================ */
+const SEARCH_FIT_PADDING = [80, 60, 60, 60];
+
+export function renderSearchMarkers(pois, onPick) {
+  clearSearchMarkers();
+  const { AMap, map } = state;
+  if (!AMap || !map || !Array.isArray(pois) || !pois.length) return;
+
+  const markers = [];
+  pois.forEach((poi, index) => {
+    if (!poi || !Array.isArray(poi.position)) return;
+    try {
+      const marker = new AMap.Marker({
+        position: poi.position,
+        content: `<div class="search-marker" title="${escapeHtml(poi.name || "")}">${index + 1}</div>`,
+        offset: new AMap.Pixel(-15, -15),
+        zIndex: 95,
+      });
+      if (typeof onPick === "function") {
+        marker.on("click", () => onPick(poi));
+      }
+      markers.push(marker);
+    } catch (err) {
+      console.warn("[search-marker] create failed", err);
+    }
+  });
+
+  if (!markers.length) return;
+
+  try {
+    map.add(markers);
+  } catch (err) {
+    console.warn("[search-marker] add failed", err);
+    return;
+  }
+  state.searchMarkers = markers;
+
+  // 自适应视野；任何参数不匹配都不影响主流程
+  try {
+    if (markers.length === 1) {
+      map.setCenter(pois[0].position);
+    } else {
+      map.setFitView(markers, false, SEARCH_FIT_PADDING);
+    }
+  } catch (err) {
+    console.warn("[search-marker] setFitView failed", err);
+  }
+}
+
+export function clearSearchMarkers() {
+  if (!state.searchMarkers || !state.searchMarkers.length) return;
+  try {
+    if (state.map) state.map.remove(state.searchMarkers);
+  } catch (err) {
+    console.warn("[search-marker] clear failed", err);
+  }
+  state.searchMarkers = [];
 }

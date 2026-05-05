@@ -50,3 +50,18 @@ export function saveSheetCollapsed(collapsed) {
 export function loadSheetCollapsed() {
   return localStorage.getItem(STORAGE_KEYS.collapsed) === "1";
 }
+
+const SHEET_POSITIONS = ["peek", "mid", "full"];
+
+export function saveSheetPosition(position) {
+  if (!SHEET_POSITIONS.includes(position)) return;
+  localStorage.setItem(STORAGE_KEYS.sheetPosition, position);
+}
+
+export function loadSheetPosition() {
+  const stored = localStorage.getItem(STORAGE_KEYS.sheetPosition);
+  if (SHEET_POSITIONS.includes(stored)) return stored;
+  // 旧版本兼容：曾用过 boolean 折叠态
+  if (localStorage.getItem(STORAGE_KEYS.collapsed) === "1") return "peek";
+  return "mid";
+}

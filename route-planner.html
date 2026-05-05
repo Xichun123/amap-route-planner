@@ -3,7 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#12343b" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
     <title>多点路线规划</title>
     <link rel="manifest" href="./app-manifest.webmanifest" />
     <link rel="stylesheet" href="./route-planner.css" />
@@ -14,6 +15,9 @@
 
       <section class="top-panel" aria-label="地点搜索">
         <form id="search-form" class="search-form">
+          <span class="search-form-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+          </span>
           <input
             id="search-input"
             class="search-input"
@@ -22,6 +26,7 @@
             placeholder="搜索地点"
             aria-label="搜索地点"
           />
+          <span class="search-form-divider" aria-hidden="true"></span>
           <input
             id="city-input"
             class="city-input"
@@ -30,14 +35,19 @@
             placeholder="城市"
             aria-label="城市"
           />
-          <button class="icon-button primary" type="submit" aria-label="搜索">搜</button>
+          <button class="icon-button primary" type="submit" aria-label="搜索">
+            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true"><path d="M5 12h14"/><polyline points="13 6 19 12 13 18"/></svg>
+          </button>
         </form>
         <div id="search-results" class="search-results" hidden></div>
       </section>
 
       <section class="status-strip" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
         <span id="status-text">等待加载地图</span>
-        <button id="reload-button" class="text-button" type="button">重载</button>
+        <button id="reload-button" class="text-button ghost" type="button" aria-label="重载">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+        </button>
       </section>
 
       <section class="bottom-sheet" aria-label="路线规划">
@@ -51,26 +61,31 @@
           <span class="sheet-grip" aria-hidden="true"></span>
         </button>
         <div class="sheet-header">
-          <div>
+          <div class="sheet-title">
             <h1>到访地点</h1>
             <p id="route-summary">还没有添加地点</p>
           </div>
           <div class="header-actions">
-            <button id="locate-button" class="text-button" type="button">定位</button>
+            <button id="locate-button" class="icon-button tinted" type="button" aria-label="定位到我的位置">
+              <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            </button>
             <button
               id="sheet-collapse-button"
               class="sheet-collapse-button"
               type="button"
               aria-label="收起路线面板"
               aria-expanded="true"
-            ></button>
+            >
+              <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
           </div>
         </div>
 
         <div class="route-options">
           <label class="switch-line">
             <input id="manual-order-toggle" type="checkbox" />
-            <span>按列表顺序</span>
+            <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+            <span class="switch-label">按列表顺序</span>
           </label>
           <select id="route-mode-select" class="mode-select" aria-label="交通方式">
             <option value="auto">自动</option>
@@ -79,13 +94,21 @@
             <option value="riding">骑行</option>
             <option value="transfer">公交</option>
           </select>
-          <button id="plan-route-button" class="solid-button" type="button">规划路线</button>
+          <button id="plan-route-button" class="solid-button" type="button">
+            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h6a4 4 0 0 0 4-4V9"/></svg>
+            <span>规划路线</span>
+          </button>
         </div>
 
         <div class="plan-bar">
-          <button id="save-plan-button" class="text-button" type="button" disabled>保存方案</button>
+          <button id="save-plan-button" class="text-button" type="button" disabled>
+            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4Z"/></svg>
+            <span>保存方案</span>
+          </button>
           <button id="load-plan-button" class="text-button" type="button">
-            方案库 <span id="plan-count" class="plan-count">0</span>
+            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4.5" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg>
+            <span>方案库</span>
+            <span id="plan-count" class="plan-count">0</span>
           </button>
         </div>
 
@@ -93,10 +116,12 @@
 
         <div class="sheet-actions">
           <button id="open-navigation-button" class="text-button" type="button" disabled>
-            打开导航
+            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true"><path d="M3 11 21 3l-8 18-2-8-8-2Z"/></svg>
+            <span>打开导航</span>
           </button>
           <button id="clear-stops-button" class="text-button danger" type="button" disabled>
-            清空
+            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3"/><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/></svg>
+            <span>清空</span>
           </button>
         </div>
       </section>

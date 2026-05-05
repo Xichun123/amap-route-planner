@@ -15,6 +15,7 @@ export const state = {
   accuracyCircle: null,
   stops: [],
   stopMarkers: new Map(),
+  searchMarkers: [],
   routeOverlays: [],
   originStopId: "",
   routeOrder: [],

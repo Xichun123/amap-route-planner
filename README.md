@@ -8,6 +8,8 @@ It can search POIs with live autocomplete, add multiple stops on the map, set a 
 
 ## Features
 
+**Core**
+
 - AMap JSAPI v2 map rendering.
 - `AMap.AutoComplete` powered live POI suggestions (type to search).
 - `AMap.Driving / Walking / Riding / Transfer` plugins for route planning.
@@ -20,6 +22,15 @@ It can search POIs with live autocomplete, add multiple stops on the map, set a 
 - `serviceHost` proxy keeps `AMAP_SECURITY_JS_CODE` out of the frontend.
 - Source split into ES modules under `src/` (map, search, route, ui, utils).
 - PWA manifest and service worker included.
+
+**UI / UX (v0.2)**
+
+- **Apple Maps inspired design system**: full SF color / type / shadow / radius scale, automatic dark mode.
+- **Three-detent draggable bottom sheet**: peek (header only) / mid (half-screen, default) / full (near full-screen). Top grip cycles up, side chevron cycles down. Position persisted in localStorage.
+- **Search results pinned on the map**: candidate POIs render as **red numbered markers** on the map alongside the dropdown list, view auto-fits to all results. Tap either the list row or the map marker to add — useful for picking by physical proximity (e.g. "which restaurant is closest").
+- **Plan library**: save / name / load multiple stop combinations to localStorage.
+- **Inline SVG icons everywhere** (zero external dependency): search, locate, plan-route, save, library, origin, priority, reorder, delete, etc.
+- **iOS-style switch**, **stop row connectors** (vertical line linking sequential stops), **iOS easing** (`cubic-bezier(.32, .72, 0, 1)`).
 
 ## Required AMap Keys
 
@@ -188,6 +199,36 @@ curl -I "https://map.example.com/_AMapService/v3/iplocation"
 
 Then open `https://map.example.com/route-planner.html`, type a keyword in the search box to see live suggestions, pick entries to add them as stops, and hit `规划路线`.
 
+### Common Pitfall: JSONP Blocked By `nosniff`
+
+If the browser console shows:
+
+```text
+Refused to execute script from '<URL>' because its MIME type ('application/json') is not executable, and strict MIME type checking is enabled.
+```
+
+and **search / geolocation / route planning all silently fail**, here is why:
+
+1. The site sets `X-Content-Type-Options: nosniff` (a recommended security header).
+2. AMap JSONP endpoints respond with `Content-Type: application/json`.
+3. Under nosniff + strict MIME, the browser refuses to execute the response as `<script>`.
+
+**Fix**: inside the `/_AMapService/*` block, neutralize nosniff for that path AND force-rewrite the response Content-Type:
+
+```caddy
+handle /_AMapService/* {
+    uri strip_prefix /_AMapService
+    uri query +jscode {$AMAP_SECURITY_JS_CODE}
+    header -X-Content-Type-Options
+    reverse_proxy https://restapi.amap.com {
+        header_up Host restapi.amap.com
+        header_down Content-Type "application/javascript; charset=utf-8"
+    }
+}
+```
+
+The bundled `deploy/Caddyfile.example` already includes this fix. Reload Caddy to take effect — no frontend changes needed.
+
 ## Updating A Deployed Site
 
 Upload changed static files to the site root, then render runtime config again if `AMAP_JSAPI_KEY` or the domain changed:
@@ -230,13 +271,15 @@ If a browser keeps old assets, hard refresh once or clear site data. The service
     ├── config.js           # constants, runtime config reader
     ├── state.js            # shared runtime state
     ├── dom.js              # DOM element references
-    ├── storage.js          # localStorage helpers
+    ├── storage.js          # localStorage helpers (incl. sheet 3-detent position)
     ├── stops.js            # stop CRUD / origin / priority
+    ├── plans.js            # saved plan store (localStorage)
     ├── main.js             # entry point, event wiring
     ├── map/
     │   ├── loader.js       # AMapLoader + Map bootstrap
     │   ├── locate.js       # geolocation flow
-    │   └── markers.js      # origin / stop markers
+    │   ├── markers.js      # origin / stop markers + red search-result candidates
+    │   └── search-markers.js  # compat shim, re-exports from markers.js
     ├── search/
     │   └── poi.js          # AMap.AutoComplete suggestions
     ├── route/
@@ -247,8 +290,10 @@ If a browser keeps old assets, hard refresh once or clear site data. The service
     │   └── navigation.js   # deep-link to AMap native navigation
     ├── ui/
     │   ├── status.js       # status bar
-    │   ├── sheet.js        # bottom sheet collapse
-    │   └── stops-view.js   # stop list + search result rendering
+    │   ├── sheet.js        # bottom sheet 3-detent (peek/mid/full)
+    │   ├── stops-view.js   # stop list + search result rendering
+    │   ├── plans-view.js   # plan library dialog rendering
+    │   └── icons.js        # inline SVG icon set (SF Symbols flavor)
     └── utils/
         ├── geo.js          # coords, distances
         └── format.js       # text / html helpers
